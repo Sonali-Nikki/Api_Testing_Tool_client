@@ -10,7 +10,7 @@ export async function apiRequest(url, options = {}) {
 
     clearTimeout(timeout);
 
-    // CORS / Server errors
+
     if (!res.ok) {
       const text = await res.text();
 
@@ -28,7 +28,7 @@ export async function apiRequest(url, options = {}) {
       data,
     };
   } catch (err) {
-    // No internet or blocked by CORS
+
     if (err.name === "AbortError") {
       return { success: false, error: "Request Timeout (10s)" };
     }

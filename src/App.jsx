@@ -38,7 +38,7 @@ function App() {
     fetchHistory();
   }, []);
 
-  // Load item into form
+ 
   const loadHistoryItem = (item) => {
     setUrl(item.url);
     setMethod(item.method);
@@ -81,6 +81,7 @@ function App() {
                   bodyText={bodyText}
                   setBodyText={setBodyText}
                   setResponseData={setResponseData}
+                  fetchHistory={fetchHistory}
                 />
               </div>
 

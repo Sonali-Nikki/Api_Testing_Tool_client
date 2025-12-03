@@ -1,42 +1,38 @@
 import { useEffect, useState } from "react";
-import { apiGet } from "../api.js";
+import { apiGet, apiPost } from "../api.js";
 
 function Collections({ onSelectCollectionItem }) {
   const [collections, setCollections] = useState([]);
-  const [newName, setNewName] = useState("");
-  const [items, setItems] = useState([]);
+  const [newName, setNewName] = useState([]);
+  const [items, setItems] = useState({}); 
 
   const fetchCollections = async () => {
     try {
       const data = await apiGet("/collections");
-      if (Array.isArray(data)) {
-        setCollections(data);
-      }
+      setCollections(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error loading collections:", err);
     }
   };
 
-  const fetchCollectionItems = async(collectionId) => {
+  const fetchCollectionItems = async (collectionId) => {
     try {
       const data = await apiGet(`/collections/${collectionId}/items`);
-
-      setItems((prev) => ({
-        ...prev,
-        [collectionId]: data, // store items separately for each collection
-      }));
+      setItems((prev) => ({ ...prev, [collectionId]: data || [] }));
     } catch (err) {
       console.error("Error loading items:", err);
     }
   };
 
   const addCollection = async () => {
-     if (!newName.trim()) return;
-
-    await apiPost("/collections", { name: newName });
-
-    setNewName("");
-    fetchCollections();
+    if (!newName.trim()) return;
+    try {
+      await apiPost("/collections", { name: newName });
+      setNewName("");
+      fetchCollections();
+    } catch (err) {
+      console.error("Error adding collection:", err);
+    }
   };
 
   useEffect(() => {
@@ -46,8 +42,7 @@ function Collections({ onSelectCollectionItem }) {
   return (
     <div className="p-3">
       <h2 className="font-bold text-lg mb-3">Collections</h2>
-
-      {/* Input new collection */}
+\
       <div className="flex gap-2 mb-3">
         <input
           className="border p-1 rounded w-full"
@@ -73,18 +68,15 @@ function Collections({ onSelectCollectionItem }) {
             📂 {col.name}
           </p>
 
-          {/* Items under collection */}
-          {items
-            .filter((i) => i.collection_id === col.id)
-            .map((item) => (
-              <div
-                key={item.id}
-                className="ml-4 p-2 bg-gray-200 rounded mb-1 cursor-pointer"
-                onClick={() => onSelectCollectionItem(item)}
-              >
-                {item.method} {item.url}
-              </div>
-            ))}
+          {items[col.id]?.map((item) => (
+            <div
+              key={item.id}
+              className="ml-4 p-2 bg-gray-200 rounded mb-1 cursor-pointer"
+              onClick={() => onSelectCollectionItem(item)}
+            >
+              {item.method} {item.url}
+            </div>
+          ))}
         </div>
       ))}
     </div>

@@ -5,27 +5,21 @@ function HistorySaver({ onSelect }) {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const load = async () => {
+    const loadHistory = async () => {
       try {
         const data = await apiGet("/history");
-
-        if (Array.isArray(data)) {
-          setHistory(data);
-        } else {
-          console.error("History API did not return an array:", data);
-        }
+        setHistory(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("History Saver Error:", err);
+        console.error("Error fetching history:", err);
       }
     };
 
-    load();
+    loadHistory();
   }, []);
 
   return (
-    <div className=" bg-gray-100 p-4 border-r overflow-y-auto">
+    <div className="bg-gray-100 p-4 border-r overflow-y-auto">
       <h2 className="font-bold text-lg mb-3">History</h2>
-
       {history.map((item) => (
         <div
           key={item.id}

@@ -18,94 +18,102 @@ function ApiForm({ setResponseData, fetchHistory }) {
   const addHeader = () => setHeaders([...headers, { key: "", value: "" }]);
   const addParam = () => setParams([...params, { key: "", value: "" }]);
 
-  const sendRequest = async () => {
-    try {
-      const token = localStorage.getItem("token");
+const sendRequest = async () => {
+  try {
+    const token = localStorage.getItem("token");
 
-      // Convert headers
-      const formattedHeaders = {};
-      headers.forEach((h) => {
-        if (h.key.trim()) formattedHeaders[h.key] = h.value;
-      });
+    // Format headers
+    const formattedHeaders = {};
+    headers.forEach((h) => {
+      if (h.key.trim()) formattedHeaders[h.key] = h.value;
+    });
 
-      // Convert params → ?key=value
-      const queryString = new URLSearchParams(
-        params
-          .filter((p) => p.key.trim())
-          .reduce((a, p) => ({ ...a, [p.key]: p.value }), {})
-      ).toString();
-
-      const finalUrl = queryString ? `${url}?${queryString}` : url;
-
-      // Parse JSON body safely
-      let jsonBody = null;
-      if (method !== "GET" && body.trim() !== "") {
-        try {
-          jsonBody = JSON.parse(body);
-        } catch {
-          alert("❌ Invalid JSON Body");
-          return;
-        }
-      }
-
-      // if (token) {
-      //   formattedHeaders["Authorization"] = `Bearer ${token}`;
-      // }
-
-      // SEND TO BACKEND PROXY
-     
-      const res = await fetch("http://localhost:8000/proxy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        body: JSON.stringify({
-          url: finalUrl,
-          method,
-          headers: JSON.parse(headersText || "{}"),
-          body: finalBody,
-        }),
-      });
-
-      const data = await res.json(); // Important: JSON not text
-      setResponseData(data);
-
-      // SAVE HISTORY
-      await fetch("http://localhost:8000/api/save-history", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        body: JSON.stringify({
-          url,
-          method,
-          headers: formattedHeaders, // ✓ already an object
-          body: jsonBody, // ✓ already parsed JSON
-        }),
-      });
-
-      // Refresh Sidebar
-      // fetchHistory();
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error sending request");
+    if (token) {
+      formattedHeaders["Authorization"] = `Bearer ${token}`;
     }
-  };
 
-  const saveToCollection = async () => {
+    const queryString = new URLSearchParams(
+      params
+        .filter((p) => p.key.trim())
+        .reduce((a, p) => ({ ...a, [p.key]: p.value }), {})
+    ).toString();
+    const requestUrl = queryString ? `${url}?${queryString}` : url;
+
+    let jsonBody = null;
+    if (method !== "GET" && body.trim() !== "") {
+      try {
+        jsonBody = JSON.parse(body);
+      } catch {
+        alert("Invalid JSON Body");
+        return;
+      }
+    }
+
+    // Send to backend proxy
+    const res = await fetch("http://localhost:8000/proxy", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+      body: JSON.stringify({
+        url: requestUrl,
+        method,
+        headers: formattedHeaders,
+        body: jsonBody, 
+      }),
+    });
+
+    const data = await res.json();
+    setResponseData(data);
+
+    // Save history
+    await fetch("http://localhost:8000/api/save-history", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+      body: JSON.stringify({
+        url,
+        method,
+        headers: formattedHeaders,
+        body: jsonBody,
+      }),
+    });
+
+    fetchHistory();
+
+  } catch (err) {
+    console.error(err);
+    alert(" Error sending request");
+  }
+};
+
+const saveToCollection = async () => {
+  try {
     const collectionId = prompt("Enter Collection ID");
-
     if (!collectionId) return;
 
-    // const token = localStorage.getItem("token");
+    const formattedHeaders = {};
+    headers.forEach((h) => {
+      if (h.key.trim()) formattedHeaders[h.key] = h.value;
+    });
+
+    let jsonBody = null;
+    if (body.trim() !== "") {
+      try {
+        jsonBody = JSON.parse(body);
+      } catch {
+        alert("Invalid JSON Body");
+        return;
+      }
+    }
 
     await fetch(`http://localhost:8000/api/collections/${collectionId}/items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
         url,
@@ -116,13 +124,17 @@ function ApiForm({ setResponseData, fetchHistory }) {
     });
 
     alert("Saved to collection!");
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Error saving to collection");
+  }
+};
+
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">API Request</h1>
 
-      {/* URL */}
       <input
         type="text"
         placeholder="Enter API URL"
@@ -131,7 +143,6 @@ function ApiForm({ setResponseData, fetchHistory }) {
         className="w-full p-2 border rounded mb-4"
       />
 
-      {/* METHOD */}
       <select
         className="p-2 border rounded w-full mb-4"
         value={method}
@@ -144,7 +155,6 @@ function ApiForm({ setResponseData, fetchHistory }) {
         <option>DELETE</option>
       </select>
 
-      {/* HEADERS */}
       <h2 className="text-lg font-semibold mb-2">Headers</h2>
       {headers.map((h, i) => (
         <div key={i} className="flex gap-2 mb-2">
@@ -174,7 +184,6 @@ function ApiForm({ setResponseData, fetchHistory }) {
         + Add Header
       </button>
 
-      {/* PARAMS */}
       <h2 className="text-lg font-semibold mb-2 mt-4">Params</h2>
       {params.map((p, i) => (
         <div key={i} className="flex gap-2 mb-2">
@@ -204,18 +213,14 @@ function ApiForm({ setResponseData, fetchHistory }) {
         + Add Param
       </button>
 
-      {/* BODY */}
       <JsonEditor value={body} onChange={(v) => setBody(v)} />
 
-      {/* SEND BUTTON */}
       <button
         className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
         onClick={sendRequest}
       >
         Send Request
       </button>
-
-      {/* SAVE TO COLLECTION BUTTON */}
 
       <button
         className="bg-green-600 text-white w-full mt-2 p-2 rounded"

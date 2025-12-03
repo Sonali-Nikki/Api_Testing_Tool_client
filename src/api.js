@@ -1,48 +1,50 @@
-// api.js
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = "https://api-testing-tool-server.onrender.com/api";
 
-
-// Add token to every request
+// Add token to headers
 function getHeaders() {
   return {
     "Content-Type": "application/json",
-    "Authorization": "Bearer " + localStorage.getItem("token")
+    "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
   };
 }
 
-// ----------------------
-// GET
-// ----------------------
+
 export async function apiGet(path) {
   const res = await fetch(API_BASE_URL + path, {
-    method: "GET",
-    headers: getHeaders()
+    headers: getHeaders(),
   });
+
+  if (!res.ok) {
+    throw new Error(`HTTP error! Status: ${res.status}`);
+  }
 
   return res.json();
 }
 
-// ----------------------
-// POST
-// ----------------------
+
 export async function apiPost(path, body) {
   const res = await fetch(API_BASE_URL + path, {
     method: "POST",
     headers: getHeaders(),
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
+
+  if (!res.ok) {
+    throw new Error(`HTTP error! Status: ${res.status}`);
+  }
 
   return res.json();
 }
 
-// ----------------------
-// DELETE
-// ----------------------
 export async function apiDelete(path) {
   const res = await fetch(API_BASE_URL + path, {
     method: "DELETE",
-    headers: getHeaders()
+    headers: getHeaders(),
   });
+
+  if (!res.ok) {
+    throw new Error(`HTTP error! Status: ${res.status}`);
+  }
 
   return res.json();
 }

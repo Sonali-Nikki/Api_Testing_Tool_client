@@ -10,3 +10,4 @@ export default function Alert({ type, message }) {
     </div>
   );
 }
+ 
