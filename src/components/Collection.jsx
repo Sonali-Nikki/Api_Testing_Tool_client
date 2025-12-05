@@ -42,7 +42,7 @@ function Collections({ onSelectCollectionItem }) {
   return (
     <div className="p-3">
       <h2 className="font-bold text-lg mb-3">Collections</h2>
-\
+
       <div className="flex gap-2 mb-3">
         <input
           className="border p-1 rounded w-full"
